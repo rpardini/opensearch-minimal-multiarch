@@ -7,13 +7,14 @@ on:
     - cron: '0 3 * * *' # Scheduled runs every day at 3am UTC
 
 env:
+  # From https://opensearch.org/downloads.html
   # This image's versions, image will be tagged with the combinations (:MAJOR, :MAJOR.MINOR, :MAJOR.MINOR
   MAJOR: "1"
-  MINOR: "2"
-  PATCH: "4"
+  MINOR: "3"
+  PATCH: "0"
 
   # Dependency versions, the actual versions used. Should match above...
-  UPSTREAM_VERSION: "1.2.4"
+  UPSTREAM_VERSION: "1.3.0"
 
 jobs:
   docker:

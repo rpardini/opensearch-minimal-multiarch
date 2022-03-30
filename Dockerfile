@@ -54,7 +54,7 @@ RUN groupadd -g $GID opensearch && \
 # amd64: https://artifacts.opensearch.org/releases/core/opensearch/1.0.0/opensearch-min-1.0.0-linux-x64.tar.gz
 # arm64: https://artifacts.opensearch.org/releases/core/opensearch/1.0.0/opensearch-min-1.0.0-linux-arm64.tar.gz
 
-ARG UPSTREAM_VERSION=1.2.4
+ARG UPSTREAM_VERSION=1.3.0
 ARG UPSTREAM_BRANCH=main
 
 RUN [[ "$(arch)" == "x86_64" ]] && export OS_ARCH="x64"; [[ "$(arch)" == "aarch64" ]] && export OS_ARCH="arm64"; echo "OS_ARCH: $OS_ARCH"; \
