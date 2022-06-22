@@ -1,4 +1,6 @@
-# Original is at https://github.com/opensearch-project/opensearch-build/blob/main/release/docker/dockerfiles/opensearch.al2.dockerfile
+# Original is at https://github.com/opensearch-project/opensearch-build/blob/main/release/docker/dockerfiles/opensearch.al2.dockerfile (DEAD)
+# Moved to https://github.com/opensearch-project/opensearch-build/blob/1.3.3/docker/release/dockerfiles/opensearch.al2.dockerfile
+
 
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -54,8 +56,8 @@ RUN groupadd -g $GID opensearch && \
 # amd64: https://artifacts.opensearch.org/releases/core/opensearch/1.0.0/opensearch-min-1.0.0-linux-x64.tar.gz
 # arm64: https://artifacts.opensearch.org/releases/core/opensearch/1.0.0/opensearch-min-1.0.0-linux-arm64.tar.gz
 
-ARG UPSTREAM_VERSION=1.3.0
-ARG UPSTREAM_BRANCH=main
+ARG UPSTREAM_VERSION=1.3.3
+ARG UPSTREAM_BRANCH=1.3.3
 
 RUN [[ "$(arch)" == "x86_64" ]] && export OS_ARCH="x64"; [[ "$(arch)" == "aarch64" ]] && export OS_ARCH="arm64"; echo "OS_ARCH: $OS_ARCH"; \
     wget --progress=dot:giga -O "/tmp/opensearch/opensearch.tgz" \
@@ -67,7 +69,7 @@ ADD opensearch-docker-entrypoint.sh $OPENSEARCH_HOME/
 
 # This comes straight from the repo for now
 ADD https://raw.githubusercontent.com/opensearch-project/opensearch-build/${UPSTREAM_BRANCH}/docker/release/config/opensearch/log4j2.properties $OPENSEARCH_DASHBOARDS_HOME/config/
-ADD https://raw.githubusercontent.com/opensearch-project/opensearch-build/${UPSTREAM_BRANCH}/docker/release/config/opensearch/opensearch.yml $OPENSEARCH_HOME/config/
+ADD https://raw.githubusercontent.com/opensearch-project/opensearch-build/${UPSTREAM_BRANCH}/config/opensearch.yml $OPENSEARCH_HOME/config/
 # Make it executable, since it's coming over http.
 RUN chmod +x $OPENSEARCH_HOME/*.sh
 
@@ -80,24 +82,33 @@ ARG UID=1000
 ARG GID=1000
 ARG OPENSEARCH_HOME=/usr/share/opensearch
 
-# Copy from Stage0
-COPY --from=linux_stage_0 $OPENSEARCH_HOME $OPENSEARCH_HOME
-WORKDIR $OPENSEARCH_HOME
-
 # Update packages
 # Install the tools we need: tar and gzip to unpack the OpenSearch tarball, and shadow-utils to give us `groupadd` and `useradd`.
 RUN yum update -y && yum install -y tar gzip shadow-utils && yum clean all
+
+# Copy from Stage0
+COPY --from=linux_stage_0 $OPENSEARCH_HOME $OPENSEARCH_HOME
+WORKDIR $OPENSEARCH_HOME
 
 # Create an opensearch user, group
 RUN groupadd -g $GID opensearch && \
     adduser -u $UID -g $GID -d $OPENSEARCH_HOME opensearch
 
 # Setup OpenSearch, except: './opensearch-onetime-setup.sh && \'
-RUN mkdir -p /usr/share/opensearch/data && chown -R $UID:$GID $OPENSEARCH_HOME && \
-    echo "export JAVA_HOME=$OPENSEARCH_HOME/jdk" >> /etc/profile.d/java_home.sh
+RUN mkdir -p /usr/share/opensearch/data && chown -R $UID:$GID $OPENSEARCH_HOME
+
+# Set $JAVA_HOME
+RUN echo "export JAVA_HOME=$OPENSEARCH_HOME/jdk" >> /etc/profile.d/java_home.sh && \
+    echo "export PATH=\$PATH:\$JAVA_HOME/bin" >> /etc/profile.d/java_home.sh
+
+ENV JAVA_HOME=$OPENSEARCH_HOME/jdk
+ENV PATH=$PATH:$JAVA_HOME/bin:$OPENSEARCH_HOME/bin
 
 # Change user. WARNING: make sure fsGroup securityPolicy matches this.
 USER $UID
+
+# Sanity check for JVM version...
+RUN $OPENSEARCH_HOME/jdk/bin/java -version
 
 # Expose ports for the opensearch service (9200 for HTTP and 9300 for internal transport) and performance analyzer (9600 for the agent and 9650 for the root cause analysis component)
 EXPOSE 9200 9300 9600 9650
