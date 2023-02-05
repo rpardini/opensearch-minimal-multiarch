@@ -59,7 +59,7 @@ RUN groupadd -g $GID opensearch && \
 ARG UPSTREAM_VERSION=1.3.8
 ARG UPSTREAM_BRANCH=1.3.8
 # Hack,  1.3.8 is not correctly tagged, apparently
-ARG ACTUALLY_RELEASED_VERSION=1.3.7
+ARG ACTUALLY_RELEASED_VERSION=1.3.6
 
 RUN [[ "$(arch)" == "x86_64" ]] && export OS_ARCH="x64"; [[ "$(arch)" == "aarch64" ]] && export OS_ARCH="arm64"; echo "OS_ARCH: $OS_ARCH"; \
     wget --progress=dot:giga -O "/tmp/opensearch/opensearch.tgz" \
